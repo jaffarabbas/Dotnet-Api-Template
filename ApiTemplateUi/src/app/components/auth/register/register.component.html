@@ -1,0 +1,116 @@
+<div class="register-page">
+    <div class="register-container">
+        <div class="logo">
+            <div class="logo-icon">JZ</div>
+            <h1>Create Account</h1>
+        </div>
+
+        <form id="registerForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        placeholder="First Name"
+                        required
+                        id="firstname"
+                        name="firstname"
+                    >
+                </div>
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        placeholder="Last Name"
+                        required
+                        id="lastname"
+                        name="lastname"
+                    >
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        placeholder="Username"
+                        required
+                        id="username"
+                        name="username"
+                    >
+                </div>
+    
+                <div class="form-group">
+                    <input 
+                        type="email" 
+                        class="form-input" 
+                        placeholder="Email Address"
+                        required
+                        id="email"
+                        name="email"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="password-container">
+                    <input 
+                        [type]="showPassword ? 'text' : 'password'" 
+                        class="form-input" 
+                        placeholder="Password"
+                        required
+                        id="password"
+                        name="password"
+                    >
+                    <button type="button" class="password-toggle" (click)="togglePassword()">
+                        {{ showPassword ? '🙈' : '👁️' }}
+                    </button>
+                </div>
+                <div class="strength-meter">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="select-container">
+                    <select class="form-select" id="accountType" name="accountType" required>
+                        <option value="" disabled selected>Select Account Type</option>
+                        <option value="1">Personal Account</option>
+                        <option value="2">Business Account</option>
+                        <option value="3">Premium Account</option>
+                        <option value="4">Developer Account</option>
+                    </select>
+                    <div class="select-arrow">▼</div>
+                </div>
+            </div>
+
+            <div class="terms-container">
+                <input type="checkbox" id="terms" class="checkbox" required>
+                <label for="terms" class="terms-label">
+                    I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                </label>
+            </div>
+
+            <button type="submit" class="register-btn">
+                Create Account
+            </button>
+        </form>
+
+        <div class="divider">
+            <span>or register with</span>
+        </div>
+
+        <div class="social-login">
+            <a href="#" class="social-btn">
+                <span>G</span> Google
+            </a>
+            <a href="#" class="social-btn">
+                <span>f</span> Facebook
+            </a>
+        </div>
+
+        <div class="login-link">
+            Already have an account?<a href="#">Sign In</a>
+        </div>
+    </div>
+</div>

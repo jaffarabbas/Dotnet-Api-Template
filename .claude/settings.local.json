@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet add package:*)",
+      "Bash(dotnet build)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(dir:*)",
+      "Bash(del \"d:\\GitHub\\C-sharp-Practice\\ApiTemplate\\Shared\\Security\\PasswordPolicyService.cs\")",
+      "Bash(sqlcmd:*)",
+      "Bash(ng generate service:*)",
+      "Bash(mkdir:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
