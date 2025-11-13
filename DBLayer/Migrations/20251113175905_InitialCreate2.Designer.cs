@@ -4,6 +4,7 @@ using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DBLayer.Migrations
 {
     [DbContext(typeof(TestContext))]
-    partial class TestContextModelSnapshot : ModelSnapshot
+    [Migration("20251113175905_InitialCreate2")]
+    partial class InitialCreate2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -665,72 +668,6 @@ namespace DBLayer.Migrations
                     b.ToTable("tblPricingList", (string)null);
                 });
 
-            modelBuilder.Entity("DBLayer.Models.TblRefreshToken", b =>
-                {
-                    b.Property<long>("RefreshTokenId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
-
-                    b.Property<string>("DeviceInfo")
-                        .HasMaxLength(500)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(45)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(45)");
-
-                    b.Property<bool>("IsRevoked")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("IsUsed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("ReplacedByToken")
-                        .HasMaxLength(500)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<DateTime?>("RevokedAt")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("RevokedByIp")
-                        .HasMaxLength(45)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(45)");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("UserID");
-
-                    b.HasKey("RefreshTokenId");
-
-                    b.HasIndex(new[] { "Token" }, "IX_tblRefreshToken_Token")
-                        .IsUnique();
-
-                    b.HasIndex(new[] { "UserId" }, "IX_tblRefreshToken_UserID");
-
-                    b.ToTable("tblRefreshToken", (string)null);
-                });
-
             modelBuilder.Entity("DBLayer.Models.TblResetToken", b =>
                 {
                     b.Property<int>("ResetTokenId")
@@ -1086,17 +1023,6 @@ namespace DBLayer.Migrations
                     b.Navigation("Resource");
                 });
 
-            modelBuilder.Entity("DBLayer.Models.TblRefreshToken", b =>
-                {
-                    b.HasOne("DBLayer.Models.TblUser", "User")
-                        .WithMany("TblRefreshTokens")
-                        .HasForeignKey("UserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_RefreshToken_User");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("DBLayer.Models.TblResetToken", b =>
                 {
                     b.HasOne("DBLayer.Models.TblTokenType", "TokenTypeNavigation")
@@ -1198,8 +1124,6 @@ namespace DBLayer.Migrations
 
             modelBuilder.Entity("DBLayer.Models.TblUser", b =>
                 {
-                    b.Navigation("TblRefreshTokens");
-
                     b.Navigation("TblResetTokens");
 
                     b.Navigation("TblUserRoles");

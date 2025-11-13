@@ -9,7 +9,9 @@
       "Bash(del \"d:\\GitHub\\C-sharp-Practice\\ApiTemplate\\Shared\\Security\\PasswordPolicyService.cs\")",
       "Bash(sqlcmd:*)",
       "Bash(ng generate service:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet ef database update:*)"
     ],
     "deny": [],
     "ask": []

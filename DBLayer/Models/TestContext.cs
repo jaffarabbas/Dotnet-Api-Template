@@ -41,6 +41,8 @@ public partial class TestContext : DbContext
 
     public virtual DbSet<TblResetToken> TblResetTokens { get; set; }
 
+    public virtual DbSet<TblRefreshToken> TblRefreshTokens { get; set; }
+
     public virtual DbSet<TblResource> TblResources { get; set; }
 
     public virtual DbSet<TblRole> TblRoles { get; set; }
@@ -61,9 +63,9 @@ public partial class TestContext : DbContext
 
     public virtual DbSet<VwViewUserRoleDetial> VwViewUserRoleDetials { get; set; }
 
-//     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-// #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//         => optionsBuilder.UseSqlServer("Server=127.0.0.1,1433;Database=test2;User Id=sa;Password=YourStrongPassword!;TrustServerCertificate=True;");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=127.0.0.1,1433;Database=test2;User Id=sa;Password=YourStrongPassword!;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -359,6 +361,49 @@ public partial class TestContext : DbContext
                 .HasConstraintName("FK_ResetToken_User");
         });
 
+        modelBuilder.Entity<TblRefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.RefreshTokenId);
+
+            entity.ToTable("tblRefreshToken");
+
+            entity.HasIndex(e => e.UserId, "IX_tblRefreshToken_UserID");
+            entity.HasIndex(e => e.Token, "IX_tblRefreshToken_Token").IsUnique();
+
+            entity.Property(e => e.RefreshTokenId).ValueGeneratedNever();
+            entity.Property(e => e.Token)
+                .HasMaxLength(500)
+                .IsUnicode(false)
+                .IsRequired();
+            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.DeviceInfo)
+                .HasMaxLength(500)
+                .IsUnicode(false);
+            entity.Property(e => e.IpAddress)
+                .HasMaxLength(45)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ExpiresAt).HasColumnType("datetime");
+            entity.Property(e => e.RevokedAt).HasColumnType("datetime");
+            entity.Property(e => e.RevokedByIp)
+                .HasMaxLength(45)
+                .IsUnicode(false);
+            entity.Property(e => e.ReplacedByToken)
+                .HasMaxLength(500)
+                .IsUnicode(false);
+            entity.Property(e => e.IsRevoked).HasDefaultValue(false);
+            entity.Property(e => e.IsUsed).HasDefaultValue(false);
+
+            entity.Ignore(e => e.IsActive);
+
+            entity.HasOne(d => d.User).WithMany(p => p.TblRefreshTokens)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_RefreshToken_User");
+        });
+
         modelBuilder.Entity<TblResource>(entity =>
         {
             entity.HasKey(e => e.ResourceId).HasName("PK__tblResou__4ED1814FFC50535C");
@@ -553,6 +598,72 @@ public partial class TestContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("tname");
+        });
+
+        modelBuilder.Entity<TblPasswordPolicy>(entity =>
+        {
+            entity.HasKey(e => e.PasswordPolicyID);
+
+            entity.ToTable("tblPasswordPolicy");
+
+            entity.Property(e => e.PasswordPolicyID).ValueGeneratedOnAdd();
+            entity.Property(e => e.MinimumLength).HasDefaultValue(12);
+            entity.Property(e => e.MaximumLength).HasDefaultValue(128);
+            entity.Property(e => e.RequireUppercase).HasDefaultValue(true);
+            entity.Property(e => e.RequireLowercase).HasDefaultValue(true);
+            entity.Property(e => e.RequireDigit).HasDefaultValue(true);
+            entity.Property(e => e.RequireSpecialCharacter).HasDefaultValue(true);
+            entity.Property(e => e.MinimumUniqueCharacters).HasDefaultValue(5);
+            entity.Property(e => e.ProhibitCommonPasswords).HasDefaultValue(true);
+            entity.Property(e => e.ProhibitSequentialCharacters).HasDefaultValue(true);
+            entity.Property(e => e.ProhibitRepeatingCharacters).HasDefaultValue(true);
+            entity.Property(e => e.EnablePasswordExpiry).HasDefaultValue(false);
+            entity.Property(e => e.MaxLoginAttempts).HasDefaultValue(5);
+            entity.Property(e => e.LockoutDurationMinutes).HasDefaultValue(30);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            entity.Property(e => e.Description).HasMaxLength(500);
+
+            entity.HasOne(d => d.Company)
+                .WithMany()
+                .HasForeignKey(d => d.CompanyID)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_PasswordPolicy_Company");
+        });
+
+        modelBuilder.Entity<TblApplicationFlag>(entity =>
+        {
+            entity.HasKey(e => e.FlagID);
+
+            entity.ToTable("tblApplicationFlag");
+
+            entity.Property(e => e.FlagID).ValueGeneratedOnAdd();
+            entity.Property(e => e.FlagName).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.FlagValue).HasMaxLength(1000).IsRequired();
+            entity.Property(e => e.DataType).HasMaxLength(50).HasDefaultValue("String");
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.PossibleValues).HasMaxLength(200);
+            entity.Property(e => e.DefaultValue).HasMaxLength(100);
+            entity.Property(e => e.ShowToUser).HasDefaultValue(false);
+            entity.Property(e => e.Category).HasMaxLength(50);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.IsReadOnly).HasDefaultValue(false);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            entity.Property(e => e.EffectiveFrom).HasColumnType("datetime");
+            entity.Property(e => e.EffectiveTo).HasColumnType("datetime");
+            entity.Property(e => e.ModuleNamespace).HasMaxLength(100);
+
+            entity.HasOne(d => d.Company)
+                .WithMany()
+                .HasForeignKey(d => d.CompanyID)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ApplicationFlag_Company");
         });
 
         modelBuilder.Entity<VwViewUserRoleDetial>(entity =>

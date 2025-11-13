@@ -55,8 +55,9 @@ namespace ApiTemplate.Controllers
                     return BadRequest(ModelState);
                 }
 
+                var deviceInfo = Request.Headers["User-Agent"].ToString();
                 var report = _unitOfWork.GetRepository<IAuthRepository>();
-                var result = await report.LoginAsync(loginDto);
+                var result = await report.LoginAsync(loginDto, ipAddress, deviceInfo);
 
                 if (result == null)
                 {
@@ -334,6 +335,86 @@ namespace ApiTemplate.Controllers
             {
                 _unitOfWork.Rollback();
                 return StatusCode(500, $"Token refresh failed: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Refreshes access token using a refresh token.
+        /// </summary>
+        [SkipJwtValidation]
+        [SkipPermissionCheck]
+        [EnableRateLimiting("PerIPPolicy")]
+        [HttpPost("refresh-access-token")]
+        public async Task<IActionResult> RefreshAccessToken([FromBody] RefreshTokenRequest request)
+        {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var deviceInfo = Request.Headers["User-Agent"].ToString();
+
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var result = await _unitOfWork.IAuthRepository.RefreshAccessTokenAsync(
+                    request.RefreshToken,
+                    ipAddress,
+                    deviceInfo
+                );
+
+                if (result == null)
+                {
+                    _logger.LogWarning("Failed refresh token attempt from IP: {IPAddress}", ipAddress);
+                    return Unauthorized("Invalid or expired refresh token.");
+                }
+
+                _unitOfWork.Commit();
+                _logger.LogInformation("Successful token refresh from IP: {IPAddress}", ipAddress);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                _logger.LogError(ex, "Token refresh failed from IP: {IPAddress}", ipAddress);
+                return StatusCode(500, "Token refresh failed. Please try again later.");
+            }
+        }
+
+        /// <summary>
+        /// Revokes a refresh token (logout from specific device).
+        /// </summary>
+        [Authorize]
+        [EnableRateLimiting("FixedPolicy")]
+        [HttpPost("revoke-token")]
+        public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest request)
+        {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var result = await _unitOfWork.IAuthRepository.RevokeRefreshTokenAsync(
+                    request.RefreshToken,
+                    ipAddress
+                );
+
+                if (!result)
+                {
+                    return BadRequest("Invalid refresh token or already revoked.");
+                }
+
+                _unitOfWork.Commit();
+                _logger.LogInformation("Refresh token revoked from IP: {IPAddress}", ipAddress);
+
+                return Ok(new { Message = "Refresh token revoked successfully." });
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                _logger.LogError(ex, "Token revocation failed from IP: {IPAddress}", ipAddress);
+                return StatusCode(500, "Token revocation failed. Please try again later.");
             }
         }
 

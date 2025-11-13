@@ -25,5 +25,7 @@ public partial class TblUser
 
     public virtual ICollection<TblResetToken> TblResetTokens { get; set; } = new List<TblResetToken>();
 
+    public virtual ICollection<TblRefreshToken> TblRefreshTokens { get; set; } = new List<TblRefreshToken>();
+
     public virtual ICollection<TblUserRole> TblUserRoles { get; set; } = new List<TblUserRole>();
 }

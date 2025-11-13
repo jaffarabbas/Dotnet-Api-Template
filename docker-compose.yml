@@ -5,7 +5,7 @@ services:
       build:
         context: .
         dockerfile: ApiTemplate/Dockerfile
-      container_name: apitemplate_api
+      container_name: apitemplate_api_v2
       depends_on:
         - db
       environment:
@@ -20,7 +20,7 @@ services:
       
   db:
       image: mcr.microsoft.com/mssql/server:2022-latest
-      container_name: sqlserver_db
+      container_name: sqlserver_db_v2
       environment:
         - ACCEPT_EULA=Y
         - SA_PASSWORD=YourStrongPassword!

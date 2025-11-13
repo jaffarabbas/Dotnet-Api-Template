@@ -31,6 +31,9 @@ namespace Repositories.Repository
         private IPasswordPolicyService? _passwordPolicyService;
         private IPasswordPolicyService PasswordPolicyService => _passwordPolicyService ??= GetService<IPasswordPolicyService>();
 
+        private IRefreshTokenService? _refreshTokenService;
+        private IRefreshTokenService RefreshTokenService => _refreshTokenService ??= GetService<IRefreshTokenService>();
+
         public AuthRepository(
             TestContext context,
             IDbConnection connection,
@@ -45,7 +48,7 @@ namespace Repositories.Repository
             _setting = settings.Value;
         }
 
-        public async Task<LoginResponse?> LoginAsync(LoginDto loginDto)
+        public async Task<LoginResponse?> LoginAsync(LoginDto loginDto, string? ipAddress = null, string? deviceInfo = null)
         {
             try
             {
@@ -64,10 +67,19 @@ namespace Repositories.Repository
                 var tokenResponse = GenerateToken(user);
                 var roles = await GetUserRolesAsync(user.Userid);
 
+                // Generate refresh token
+                var refreshToken = await RefreshTokenService.GenerateRefreshTokenAsync(
+                    user.Userid,
+                    ipAddress,
+                    deviceInfo
+                );
+
                 return new LoginResponse
                 {
                     Token = tokenResponse.JWTToken,
+                    RefreshToken = refreshToken.Token,
                     LoginDate = DateTime.UtcNow,
+                    RefreshTokenExpiresAt = refreshToken.ExpiresAt,
                     Roles = roles.ToList()
                 };
             }
@@ -494,6 +506,56 @@ namespace Repositories.Repository
                          join r in _context.TblRoles on ur.RoleId equals r.RoleId
                          where ur.UserId == userId && ur.UserRoleIsActive
                          select r.RoleTitle).ToListAsync();
+        }
+
+        public async Task<RefreshTokenResponse?> RefreshAccessTokenAsync(string refreshToken, string? ipAddress = null, string? deviceInfo = null)
+        {
+            try
+            {
+                // Get and validate the refresh token
+                var token = await RefreshTokenService.GetRefreshTokenAsync(refreshToken);
+
+                if (token == null || !token.IsActive)
+                    return null;
+
+                // Verify user is still active
+                if (!token.User.Status)
+                    return null;
+
+                // Rotate the refresh token (revoke old, create new)
+                var newRefreshToken = await RefreshTokenService.RotateRefreshTokenAsync(
+                    token,
+                    ipAddress,
+                    deviceInfo
+                );
+
+                // Generate new access token
+                var accessTokenResponse = GenerateToken(token.User);
+
+                return new RefreshTokenResponse
+                {
+                    AccessToken = accessTokenResponse.JWTToken,
+                    RefreshToken = newRefreshToken.Token,
+                    ExpiresAt = DateTime.UtcNow.AddHours(_setting.AccessTokenExpirationHours),
+                    RefreshTokenExpiresAt = newRefreshToken.ExpiresAt
+                };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<bool> RevokeRefreshTokenAsync(string refreshToken, string? ipAddress = null)
+        {
+            try
+            {
+                return await RefreshTokenService.RevokeRefreshTokenAsync(refreshToken, ipAddress);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
     }
 }
