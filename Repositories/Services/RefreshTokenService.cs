@@ -1,4 +1,5 @@
 using ApiTemplate.Dtos;
+using ApiTemplate.Helper.Enum;
 using ApiTemplate.Repository;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
@@ -21,11 +22,10 @@ namespace Repositories.Services
             TestContext context,
             IDbConnection connection,
             IMemoryCache cache,
-            IDbTransaction? transaction,
             IOptions<JWTSetting> settings,
             IUnitOfWork unitOfWork,
             IServiceProvider serviceProvider)
-            : base(context, connection, cache, transaction, serviceProvider)
+            : base(context, connection, cache, null, serviceProvider)
         {
             _context = context;
             _unitOfWork = unitOfWork;
@@ -56,7 +56,7 @@ namespace Repositories.Services
                 IsUsed = false
             };
 
-            await tokenRepo.AddAsync("tblRefreshToken", refreshToken);
+            await tokenRepo.AddAsync(refreshToken);
             return refreshToken;
         }
 
@@ -85,8 +85,14 @@ namespace Repositories.Services
 
         public async Task<bool> RevokeAllUserTokensAsync(long userId)
         {
+            var now = DateTime.UtcNow;
+
+            // Expand IsActive logic: !IsRevoked && !IsUsed && ExpiresAt > now
             var tokens = await _context.TblRefreshTokens
-                .Where(rt => rt.UserId == userId && rt.IsActive)
+                .Where(rt => rt.UserId == userId
+                    && !rt.IsRevoked
+                    && !rt.IsUsed
+                    && rt.ExpiresAt > now)
                 .ToListAsync();
 
             if (!tokens.Any())
@@ -144,8 +150,14 @@ namespace Repositories.Services
 
         private async Task EnforceMaxActiveTokensAsync(long userId)
         {
+            var now = DateTime.UtcNow;
+
+            // Expand IsActive logic: !IsRevoked && !IsUsed && ExpiresAt > now
             var activeTokens = await _context.TblRefreshTokens
-                .Where(rt => rt.UserId == userId && rt.IsActive)
+                .Where(rt => rt.UserId == userId
+                    && !rt.IsRevoked
+                    && !rt.IsUsed
+                    && rt.ExpiresAt > now)
                 .OrderBy(rt => rt.CreatedAt)
                 .ToListAsync();
 

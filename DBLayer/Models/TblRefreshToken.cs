@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DBLayer.Models;
 
@@ -31,7 +32,9 @@ public partial class TblRefreshToken
 
     public bool IsUsed { get; set; }
 
+    [NotMapped]
     public bool IsActive => !IsRevoked && !IsUsed && DateTime.UtcNow < ExpiresAt;
 
+    [NotMapped]
     public virtual TblUser User { get; set; } = null!;
 }

@@ -27,18 +27,20 @@ namespace ApiTemplate.Repository
 
         public async Task<List<TblItemDto>> GetAllItemsWithPricingTitle()
         {
-            var result = await (from item in _context.TblItems
-                                join price in _context.TblPricingLists
-                                on item.TranId equals price.ItemId
-                                select new TblItemDto
-                                {
-                                    TranId = item.TranId,
-                                    ItemRefNo = item.ItemRefNo,
-                                    ItemTitle = item.ItemTitle,
-                                    SaleRate = item.SaleRate,
-                                    TransactionDate = item.TransactionDate,
-                                    PricingTitle = price.PricingTitle
-                                }).ToListAsync();
+            var result = await _context.TblItems.RightJoin(
+                _context.TblPricingLists,
+                item => item.TranId,
+                pricing => pricing.ItemId,
+                (item, pricing) => new TblItemDto
+                {
+                    TranId = item.TranId,
+                    ItemRefNo = item.ItemRefNo,
+                    ItemTitle = item.ItemTitle,
+                    SaleRate = item.SaleRate,
+                    TransactionDate = item.TransactionDate,
+                    PricingTitle = pricing.PricingTitle
+                })
+                .ToListAsync();
 
             return result;
         }

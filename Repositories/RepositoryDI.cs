@@ -28,6 +28,7 @@ namespace Repositories
             // Authorization Service
             services.AddScoped<IAuthorizationService, AuthorizationService>();
             services.AddScoped<IPasswordPolicyService, PasswordPolicyService>();
+            services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             #endregion
 
             return services;

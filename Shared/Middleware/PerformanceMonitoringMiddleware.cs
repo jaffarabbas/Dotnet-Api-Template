@@ -26,6 +26,14 @@ namespace ApiTemplate.Middleware
             var path = context.Request.Path;
             var method = context.Request.Method;
 
+            // Register callback to add header before response starts
+            context.Response.OnStarting(() =>
+            {
+                var elapsedMs = stopwatch.ElapsedMilliseconds;
+                context.Response.Headers.TryAdd("X-Response-Time-Ms", elapsedMs.ToString());
+                return Task.CompletedTask;
+            });
+
             try
             {
                 await _next(context);
@@ -53,9 +61,6 @@ namespace ApiTemplate.Middleware
                 _logger.LogDebug(
                     "PERFORMANCE: Request completed | {Method} {Path} | Duration: {Duration}ms | Status: {StatusCode}",
                     method, path, elapsedMs, context.Response.StatusCode);
-
-                // Add performance header for client-side monitoring
-                context.Response.Headers.TryAdd("X-Response-Time-Ms", elapsedMs.ToString());
             }
         }
     }

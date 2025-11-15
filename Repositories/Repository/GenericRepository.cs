@@ -5,6 +5,7 @@ using DBLayer.Models;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 
 namespace ApiTemplate.Repository
@@ -348,7 +349,8 @@ namespace ApiTemplate.Repository
                 .Where(p =>
                     p.Name.ToLower() != "id" &&
                     p.CanRead &&
-                    IsSimpleType(p.PropertyType)) // exclude navigation / complex / collections
+                    IsSimpleType(p.PropertyType) && // exclude navigation / complex / collections
+                    !Attribute.IsDefined(p, typeof(NotMappedAttribute))) // exclude NotMapped properties
                 .ToList();
 
             // SECURITY: Validate all column names
@@ -375,7 +377,8 @@ namespace ApiTemplate.Repository
                 .Where(p =>
                     p.Name != keyName &&
                     p.CanRead &&
-                    IsSimpleType(p.PropertyType))
+                    IsSimpleType(p.PropertyType) &&
+                    !Attribute.IsDefined(p, typeof(NotMappedAttribute))) // exclude NotMapped properties
                 .ToList();
 
             // SECURITY: Validate all column names
