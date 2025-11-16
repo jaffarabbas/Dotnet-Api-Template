@@ -100,12 +100,12 @@ export class LoginComponent implements AfterViewInit {
       next: (response) => {
         this.loading = false;
 
-        if (response.statusCode === '200' && response.data) {
+        if (response.StatusCode === '200' && response.Data) {
           // Save authentication data to local storage
           const authData = {
-            token: response.data.token,
-            loginDate: response.data.loginDate,
-            roles: response.data.roles,
+            token: response.Data.token,
+            loginDate: response.Data.loginDate,
+            roles: response.Data.roles,
             username: credentials.username
           };
 
@@ -118,7 +118,7 @@ export class LoginComponent implements AfterViewInit {
             this.router.navigate(['/home']);
           }, 1000);
         } else {
-          this.errorMessage = response.message || 'Login failed. Please try again.';
+          this.errorMessage = response.Message || 'Login failed. Please try again.';
         }
       },
       error: (error) => {

@@ -94,7 +94,7 @@ namespace ApiTemplate.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var response = await _unitOfWork.IAuthRepository.RegisterAsync(userDto);
+                var response = await _unitOfWork.GetRepository<IAuthRepository>().RegisterAsync(userDto);
                 _unitOfWork.Commit();
                 return Ok(response);
             }
@@ -127,7 +127,7 @@ namespace ApiTemplate.Controllers
                 if (!long.TryParse(userIdClaim, out long userId))
                     return Unauthorized("Invalid user session.");
 
-                var result = await _unitOfWork.IAuthRepository.ChangePasswordAsync(userId, dto);
+                var result = await _unitOfWork.GetRepository<IAuthRepository>().ChangePasswordAsync(userId, dto);
                 if (!result)
                     return NotFound("User not found.");
 
@@ -182,7 +182,7 @@ namespace ApiTemplate.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var resetToken = await _unitOfWork.IAuthRepository.GeneratePasswordResetTokenAsync(forgotPasswordDto);
+                var resetToken = await _unitOfWork.GetRepository<IAuthRepository>().GeneratePasswordResetTokenAsync(forgotPasswordDto);
                 _unitOfWork.Commit();
 
                 // Always return the same message for security (don't reveal if email exists)
@@ -212,7 +212,7 @@ namespace ApiTemplate.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var resetToken = await _unitOfWork.IAuthRepository.GeneratePasswordResetTokenAsync(forgotPasswordDto);
+                var resetToken = await _unitOfWork.GetRepository<IAuthRepository>().GeneratePasswordResetTokenAsync(forgotPasswordDto);
                 _unitOfWork.Commit();
 
                 if (string.IsNullOrEmpty(resetToken))
@@ -249,7 +249,7 @@ namespace ApiTemplate.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var result = await _unitOfWork.IAuthRepository.ResetPasswordAsync(resetPasswordDto);
+                var result = await _unitOfWork.GetRepository<IAuthRepository>().ResetPasswordAsync(resetPasswordDto);
                 if (!result)
                 {
                     return BadRequest("Invalid reset token, token expired, or user not found.");
@@ -274,6 +274,7 @@ namespace ApiTemplate.Controllers
         /// Generates a JWT reset token for the current authenticated user.
         /// </summary>
         [Authorize]
+        [SkipPermissionCheck]
         [EnableRateLimiting("FixedPolicy")]
         [HttpPost("generate-jwt-reset-token")]
         public async Task<IActionResult> GenerateJwtResetToken()
@@ -284,7 +285,7 @@ namespace ApiTemplate.Controllers
                 if (!long.TryParse(userIdClaim, out long userId))
                     return Unauthorized("Invalid user session.");
 
-                var resetToken = await _unitOfWork.IAuthRepository.GenerateJwtResetTokenAsync(userId);
+                var resetToken = await _unitOfWork.GetRepository<IAuthRepository>().GenerateJwtResetTokenAsync(userId);
                 if (string.IsNullOrEmpty(resetToken))
                 {
                     return BadRequest("Unable to generate reset token for inactive user.");
@@ -318,7 +319,7 @@ namespace ApiTemplate.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var tokenResponse = await _unitOfWork.IAuthRepository.RefreshTokenWithResetTokenAsync(refreshTokenDto.ResetToken);
+                var tokenResponse = await _unitOfWork.GetRepository<IAuthRepository>().RefreshTokenWithResetTokenAsync(refreshTokenDto.ResetToken);
                 if (tokenResponse == null)
                 {
                     return BadRequest("Invalid or expired reset token.");
@@ -355,7 +356,7 @@ namespace ApiTemplate.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var result = await _unitOfWork.IAuthRepository.RefreshAccessTokenAsync(
+                var result = await _unitOfWork.GetRepository<IAuthRepository>().RefreshAccessTokenAsync(
                     request.RefreshToken,
                     ipAddress,
                     deviceInfo
@@ -395,7 +396,7 @@ namespace ApiTemplate.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var result = await _unitOfWork.IAuthRepository.RevokeRefreshTokenAsync(
+                var result = await _unitOfWork.GetRepository<IAuthRepository>().RevokeRefreshTokenAsync(
                     request.RefreshToken,
                     ipAddress
                 );

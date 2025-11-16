@@ -2,6 +2,7 @@ using ApiTemplate.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using Repositories.Repository;
 using Repositories.Services;
+using Scrutor;
 
 namespace Repositories
 {
@@ -25,10 +26,13 @@ namespace Repositories
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             #region Service Scanning
-            // Authorization Service
-            services.AddScoped<IAuthorizationService, AuthorizationService>();
-            services.AddScoped<IPasswordPolicyService, PasswordPolicyService>();
-            services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+            // Auto-register services from the Repositories.Services namespace using Scrutor
+            services.Scan(scan => scan
+                .FromAssemblyOf<AuthorizationService>()
+                .AddClasses(classes => classes.InNamespaces("Repositories.Services"))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
+
             #endregion
 
             return services;

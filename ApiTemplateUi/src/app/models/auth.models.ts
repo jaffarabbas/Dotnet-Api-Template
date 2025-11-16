@@ -10,9 +10,9 @@ export interface LoginResponse {
 }
 
 export interface ApiResponse<T> {
-  statusCode: string;
-  message: string;
-  data: T;
+  StatusCode: string;
+  Message: string;
+  Data: T;
 }
 
 export interface AuthUser {

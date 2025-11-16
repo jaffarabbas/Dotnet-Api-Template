@@ -57,6 +57,7 @@ namespace Repositories.Services
             };
 
             await tokenRepo.AddAsync(refreshToken);
+            await tokenRepo.SaveAsync();
             return refreshToken;
         }
 

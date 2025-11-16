@@ -5,7 +5,13 @@ import { Observable } from 'rxjs';
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = localStorage.getItem('access_token'); // Or get from a service
+    // Don't attach token for login endpoint
+    // Adjust this check if your login URL changes
+    if (req.url.endsWith('/login') || req.url.includes('/api/v1/Auth/login')) {
+      return next.handle(req);
+    }
+
+    const token = localStorage.getItem('access_token'); // Or get from a centralized auth-storage service
     if (token) {
       const cloned = req.clone({
         setHeaders: {
@@ -16,4 +22,4 @@ export class AuthInterceptor implements HttpInterceptor {
     }
     return next.handle(req);
   }
-}
+} 
