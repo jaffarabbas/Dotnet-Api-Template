@@ -1,0 +1,15 @@
+node_modules
+dist
+.angular
+.vscode
+.git
+.gitignore
+*.md
+.editorconfig
+karma.conf.js
+*.spec.ts
+e2e
+coverage
+.DS_Store
+npm-debug.log
+yarn-error.log

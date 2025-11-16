@@ -1,6 +1,19 @@
 version: '3.8'
 
 services:
+  nginx:
+      build:
+        context: ./ApiTemplateUi
+        dockerfile: Dockerfile
+      container_name: nginx_proxy
+      depends_on:
+        - api
+      ports:
+        - "80:80"
+      networks:
+        - app-network
+      restart: unless-stopped
+
   api:
       build:
         context: .
@@ -11,13 +24,14 @@ services:
       environment:
         - ConnectionStrings__DefaultConnection=Server=db,1433;Database=test2;User Id=sa;Password=YourStrongPassword!;TrustServerCertificate=True;
         - ASPNETCORE_ENVIRONMENT=Development
-      ports:
-        - "8080:8080"
-        - "8081:8081"
+      # Remove external port exposure - only accessible via nginx
+      expose:
+        - "8080"
+        - "8081"
       networks:
         - app-network
       restart: on-failure
-      
+
   db:
       image: mcr.microsoft.com/mssql/server:2022-latest
       container_name: sqlserver_db_v2
@@ -30,6 +44,7 @@ services:
         - app-network
       volumes:
         - sql-data:/var/opt/mssql
+      restart: unless-stopped
 
 networks:
   app-network:
