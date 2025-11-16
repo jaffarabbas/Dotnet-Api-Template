@@ -62,38 +62,49 @@ namespace Shared.Services
             );
 
             // SQL Server Sink (for production logging to database)
+            // Only enable in non-Development environments or when explicitly configured
             var connectionString = configuration.GetConnectionString("DefaultConnection");
-            if (!string.IsNullOrEmpty(connectionString))
+            var enableDbLogging = configuration.GetValue<bool>("Serilog:EnableDatabaseLogging", !environment.IsDevelopment());
+
+            if (!string.IsNullOrEmpty(connectionString) && enableDbLogging)
             {
-                var columnOptions = new ColumnOptions
+                try
                 {
-                    AdditionalColumns = new Collection<SqlColumn>
+                    var columnOptions = new ColumnOptions
                     {
-                        new SqlColumn { ColumnName = "UserName", DataType = SqlDbType.NVarChar, DataLength = 100, AllowNull = true },
-                        new SqlColumn { ColumnName = "IPAddress", DataType = SqlDbType.NVarChar, DataLength = 50, AllowNull = true },
-                        new SqlColumn { ColumnName = "RequestPath", DataType = SqlDbType.NVarChar, DataLength = 500, AllowNull = true },
-                        new SqlColumn { ColumnName = "ActionName", DataType = SqlDbType.NVarChar, DataLength = 200, AllowNull = true },
-                        new SqlColumn { ColumnName = "Application", DataType = SqlDbType.NVarChar, DataLength = 100, AllowNull = true }
-                    }
-                };
+                        AdditionalColumns = new Collection<SqlColumn>
+                        {
+                            new SqlColumn { ColumnName = "UserName", DataType = SqlDbType.NVarChar, DataLength = 100, AllowNull = true },
+                            new SqlColumn { ColumnName = "IPAddress", DataType = SqlDbType.NVarChar, DataLength = 50, AllowNull = true },
+                            new SqlColumn { ColumnName = "RequestPath", DataType = SqlDbType.NVarChar, DataLength = 500, AllowNull = true },
+                            new SqlColumn { ColumnName = "ActionName", DataType = SqlDbType.NVarChar, DataLength = 200, AllowNull = true },
+                            new SqlColumn { ColumnName = "Application", DataType = SqlDbType.NVarChar, DataLength = 100, AllowNull = true }
+                        }
+                    };
 
-                // Remove the default Id column to use auto-increment
-                columnOptions.Store.Remove(StandardColumn.Properties);
-                columnOptions.Store.Add(StandardColumn.LogEvent);
+                    // Remove the default Id column to use auto-increment
+                    columnOptions.Store.Remove(StandardColumn.Properties);
+                    columnOptions.Store.Add(StandardColumn.LogEvent);
 
-                loggerConfig.WriteTo.MSSqlServer(
-                    connectionString: connectionString,
-                    sinkOptions: new MSSqlServerSinkOptions
-                    {
-                        TableName = "ApplicationLogs",
-                        SchemaName = "dbo",
-                        AutoCreateSqlTable = true,
-                        BatchPostingLimit = 50,
-                        BatchPeriod = TimeSpan.FromSeconds(5)
-                    },
-                    columnOptions: columnOptions,
-                    restrictedToMinimumLevel: LogEventLevel.Information
-                );
+                    loggerConfig.WriteTo.MSSqlServer(
+                        connectionString: connectionString,
+                        sinkOptions: new MSSqlServerSinkOptions
+                        {
+                            TableName = "ApplicationLogs",
+                            SchemaName = "dbo",
+                            AutoCreateSqlTable = true,
+                            BatchPostingLimit = 50,
+                            BatchPeriod = TimeSpan.FromSeconds(5)
+                        },
+                        columnOptions: columnOptions,
+                        restrictedToMinimumLevel: LogEventLevel.Information
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to configure SQL Server logging sink: {ex.Message}");
+                    // Continue without SQL Server logging - file and console logging will still work
+                }
             }
 
             // Create the logger

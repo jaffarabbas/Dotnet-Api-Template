@@ -70,7 +70,7 @@ public partial class TestContext : DbContext
         if (!optionsBuilder.IsConfigured)
         {
             // Fallback only if not configured via DI (shouldn't happen in normal operation)
-            optionsBuilder.UseSqlServer("Server=db,1433;Database=test2;User Id=sa;Password=YourStrongPassword!;TrustServerCertificate=True;");
+            //optionsBuilder.UseSqlServer("Server=db,1433;Database=test2;User Id=sa;Password=YourStrongPassword!;TrustServerCertificate=True;");
         }
     }
 
