@@ -156,6 +156,7 @@ namespace ApiTemplate.Controllers
         /// </summary>
         [Authorize]
         [HttpPost("logout")]
+        [SkipPermissionCheck]
         public async Task<IActionResult> Logout()
         {
             try
